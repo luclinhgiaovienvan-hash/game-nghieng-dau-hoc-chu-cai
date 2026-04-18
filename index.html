@@ -1,198 +1,44 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang='vi'>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bé Học Chữ Cái - Vụn Vặt Project</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs" type="module"></script>
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
-
-    <style>
-        :root {
-            --pastel-pink: #fce4ec;
-            --pastel-blue: #e3f2fd;
-            --pastel-green: #e8f5e9;
-            --accent-color: #ff80ab;
-            --text-color: #5d4037;
-        }
-
-        body, html {
-            margin: 0; padding: 0; width: 100%; height: 100%;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-blue));
-            color: var(--text-color);
-            overflow: hidden;
-            touch-action: manipulation;
-        }
-
-        /* Giao diện chính */
-        #game-container {
-            display: flex; flex-direction: column; align-items: center;
-            width: 100%; height: 100%; position: relative;
-        }
-
-        /* Thanh tiến trình & Điểm */
-        .header {
-            width: 90%; display: flex; justify-content: space-between;
-            align-items: center; margin-top: 15px; z-index: 10;
-        }
-        #progress-bar {
-            flex-grow: 1; height: 15px; background: white;
-            border-radius: 10px; margin: 0 15px; overflow: hidden;
-        }
-        #progress-fill {
-            width: 0%; height: 100%; background: var(--accent-color);
-            transition: width 0.3s;
-        }
-
-        /* Nhân vật & Câu hỏi */
-        .character-box { font-size: 50px; margin: 10px 0; animation: bounce 2s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-        
-        .question-text {
-            font-size: 1.8rem; text-align: center; font-weight: bold;
-            background: rgba(255, 255, 255, 0.7); padding: 10px 20px;
-            border-radius: 20px; border: 3px dashed var(--accent-color);
-            margin: 0 10px;
-        }
-
-        /* Khu vực đáp án */
-        .options-area {
-            display: flex; justify-content: space-around; width: 100%;
-            margin-top: 30px; padding: 0 10px; box-sizing: border-box;
-        }
-        .option-card {
-            width: 40%; aspect-ratio: 1/1; background: white;
-            border-radius: 30px; display: flex; align-items: center;
-            justify-content: center; font-size: 5rem; font-weight: bold;
-            box-shadow: 0 8px 0 #ddd; border: 8px solid transparent;
-            transition: all 0.2s; position: relative;
-        }
-        .option-card.active { border-color: #4caf50; transform: scale(1.05); }
-
-        /* Camera & Điều khiển dự phòng */
-        #cam-preview {
-            position: absolute; bottom: 10px; right: 10px;
-            width: 100px; height: 75px; border-radius: 10px;
-            background: #000; transform: scaleX(-1); border: 2px solid white;
-        }
-        .controls-fallback {
-            position: absolute; bottom: 30px; display: flex; gap: 50px;
-        }
-        .btn-manual {
-            padding: 15px 30px; border-radius: 50px; border: none;
-            background: var(--accent-color); color: white; font-weight: bold;
-        }
-
-        /* Lớp phủ (Start/End/Feedback) */
-        .overlay {
-            position: fixed; inset: 0; background: rgba(255,255,255,0.95);
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; z-index: 100; text-align: center;
-        }
-        .btn-main {
-            padding: 20px 60px; font-size: 1.5rem; border-radius: 50px;
-            background: #4caf50; color: white; border: none; cursor: pointer;
-            box-shadow: 0 6px 0 #2e7d32; margin-top: 20px;
-        }
-        
-        #feedback-icon {
-            position: absolute; font-size: 10rem; display: none; z-index: 200;
-        }
-
-        /* Hiệu ứng rung màn hình */
-        .shake { animation: shake 0.5s; }
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-10px); }
-            75% { transform: translateX(10px); }
-        }
-    </style>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no'>
+<title>Bé Học Chữ Cái - Fixed</title>
+<script src='https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js'></script>
+<style>
+:root{--pink:#fce4ec;--blue:#e3f2fd;--accent:#ff80ab;--text:#5d4037}
+html,body{margin:0;height:100%;font-family:Segoe UI,sans-serif;background:linear-gradient(135deg,var(--pink),var(--blue));overflow:hidden;color:var(--text)}
+#game{display:flex;flex-direction:column;align-items:center;height:100%;padding:10px;box-sizing:border-box}.header{width:95%;display:flex;gap:10px;align-items:center}.bar{flex:1;height:14px;background:#fff;border-radius:999px;overflow:hidden}.fill{height:100%;width:0;background:var(--accent);transition:.3s}.card{font-size:52px}.q{font-size:1.7rem;font-weight:700;background:rgba(255,255,255,.7);padding:10px 16px;border-radius:18px;border:3px dashed var(--accent);margin:10px;text-align:center}.opts{display:flex;justify-content:space-around;width:100%;margin-top:20px}.opt{width:42%;aspect-ratio:1;background:#fff;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:5rem;font-weight:700;box-shadow:0 8px 0 #ddd;border:8px solid transparent;transition:.2s}.opt.active{border-color:#4caf50;transform:scale(1.05)}#cam{position:absolute;right:10px;bottom:10px;width:110px;height:82px;background:#000;border-radius:12px;border:2px solid #fff}.controls{position:absolute;left:0;right:0;bottom:18px;display:flex;justify-content:center;gap:20px}.btn{border:0;border-radius:40px;padding:14px 24px;background:var(--accent);color:#fff;font-weight:700}.overlay{position:fixed;inset:0;background:rgba(255,255,255,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9;text-align:center}.hide{display:none}.shake{animation:shake .45s}@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+</style>
 </head>
 <body>
-
-<div id="game-container">
-    <div class="header">
-        <div id="score-text">⭐: 0</div>
-        <div id="progress-bar"><div id="progress-fill"></div></div>
-    </div>
-
-    <div class="character-box">🐰</div>
-    <div class="question-text" id="question">Đang tải...</div>
-
-    <div class="options-area">
-        <div id="opt-L" class="option-card" onclick="checkAnswer('L')">?</div>
-        <div id="opt-R" class="option-card" onclick="checkAnswer('R')">?</div>
-    </div>
-
-    <video id="webcam" style="display:none" autoplay playsinline></video>
-    <canvas id="cam-preview"></canvas>
-
-    <div class="controls-fallback">
-        <button class="btn-manual" onclick="checkAnswer('L')">⬅️ Trái</button>
-        <button class="btn-manual" onclick="checkAnswer('R')">Phải ➡️</button>
-    </div>
-
-    <div id="feedback-icon">❌</div>
+<div id='game'>
+<div class='header'><div id='score'>⭐ 0</div><div class='bar'><div class='fill' id='fill'></div></div></div>
+<div class='card'>🐰</div>
+<div class='q' id='question'>Nhấn bắt đầu</div>
+<div class='opts'><div class='opt' id='L'>A</div><div class='opt' id='R'>B</div></div>
+<video id='video' autoplay playsinline muted style='display:none'></video>
+<canvas id='cam'></canvas>
+<div class='controls'><button class='btn' onclick='choose("L")'>⬅️ Trái</button><button class='btn' onclick='choose("R")'>Phải ➡️</button></div>
 </div>
-
-<div id="start-screen" class="overlay">
-    <h1 style="color: var(--accent-color); font-size: 3rem;">BÉ HỌC CHỮ CÁI</h1>
-    <p>Nghiêng đầu sang trái hoặc phải để chọn đáp án nhé!</p>
-    <div class="character-box" style="font-size: 100px;">🎨</div>
-    <button class="btn-main" onclick="startGame()">BẮT ĐẦU</button>
-</div>
-
-<div id="end-screen" class="overlay" style="display: none;">
-    <h1 id="final-status">HOÀN THÀNH!</h1>
-    <p style="font-size: 1.5rem;">Số điểm của bé: <span id="final-score">0</span></p>
-    <div class="character-box" style="font-size: 100px;">🏆</div>
-    <button class="btn-main" onclick="location.reload()">CHƠI LẠI</button>
-</div>
-
-<script type="module">
-    import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs";
-
-    // --- DỮ LIỆU CÂU HỎI (TỪ FILE PPT CỦA LINH) ---
-    const QUESTIONS_DATA = [
-        { q: "a", options: ["a", "ă"], correct: "a" }, // Slide 3
-        { q: "ă", options: ["ă", "â"], correct: "ă" }, // Slide 6
-        { q: "â", options: ["â", "ă"], correct: "â" }, // Slide 9
-        { q: "b", options: ["b", "d"], correct: "b" }, // Slide 12
-        { q: "d", options: ["d", "b"], correct: "d" }, // Slide 15
-        { q: "đ", options: ["đ", "d"], correct: "đ" }, // Slide 18
-        { q: "ô", options: ["ô", "ư"], correct: "ô" }, // Slide 21
-        { q: "ư", options: ["ư", "ô"], correct: "ư" }  // Slide 24
-    ];
-
-    let currentQuestions = [];
-    let currentIdx = 0;
-    let score = 0;
-    let faceLandmarker;
-    let webcamRunning = false;
-    let isProcessing = false;
-    let selectionCounter = 0; // Để tránh nhận diện quá nhạy
-
-    const video = document.getElementById("webcam");
-    const canvas = document.getElementById("cam-preview");
-    const ctx = canvas.getContext("2d");
-
-    // Khởi tạo MediaPipe
-    async function initFaceDetection() {
-        const filesetResolver = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
-        faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
-            baseOptions: {
-                modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
-                delegate: "GPU"
-            },
-            runningMode: "VIDEO",
-            numFaces: 1
-        });
-    }
-
-    window.startGame = async () => {
-        document.getElementById('start-screen').style.display = 'none';
-        
-        // Trộn câu hỏi
-        currentQuestions = [...QUESTIONS
+<div id='start' class='overlay'><h1>BÉ HỌC CHỮ CÁI</h1><p>Xoay đầu hoặc bấm nút để chọn đáp án</p><button class='btn' onclick='startGame()'>BẮT ĐẦU</button></div>
+<div id='end' class='overlay hide'><h1>🏆 Hoàn thành!</h1><p>Điểm: <span id='final'></span></p><button class='btn' onclick='location.reload()'>Chơi lại</button></div>
+<script>
+const data=[{q:'a',o:['a','ă'],c:'a'},{q:'ă',o:['ă','â'],c:'ă'},{q:'â',o:['â','ă'],c:'â'},{q:'b',o:['b','d'],c:'b'},{q:'d',o:['d','b'],c:'d'},{q:'đ',o:['đ','d'],c:'đ'}];
+let arr=[],i=0,score=0,busy=false,last=0;
+const video=document.getElementById('video'),cam=document.getElementById('cam'),ctx=cam.getContext('2d');
+function speak(t){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='vi-VN';u.rate=.95;speechSynthesis.speak(u)}
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function startGame(){document.getElementById('start').classList.add('hide');arr=shuffle(data);load();startCam();}
+function load(){busy=false;if(i>=arr.length)return endGame();let x=arr[i],op=shuffle(x.o);L.innerText=op[0];R.innerText=op[1];question.innerText='Hãy chọn chữ '+x.q;fill.style.width=((i+1)/arr.length*100)+'%';speak('Hãy chọn chữ '+x.q)}
+async function startCam(){try{const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640,height:480},audio:false});video.srcObject=stream;video.onloadeddata=loop;}catch(e){console.log(e);}}
+function loop(){cam.width=video.videoWidth||320;cam.height=video.videoHeight||240;tick();}
+function tick(){ctx.drawImage(video,0,0,cam.width,cam.height);requestAnimationFrame(tick)}
+function choose(side){if(busy)return;busy=true;const pick=document.getElementById(side).innerText;const ok=pick===arr[i].c;if(ok){score+=10;scoreEl();confetti({particleCount:90,spread:70,origin:{y:.6}});speak('Đúng rồi giỏi lắm')}else{game.classList.add('shake');navigator.vibrate&&navigator.vibrate(250);speak('Sai rồi thử lại nhé')}setTimeout(()=>{game.classList.remove('shake');if(ok)i++;load();busy=false;},1200)}
+function scoreEl(){score.innerText='⭐ '+score}
+function endGame(){final.innerText=score;end.classList.remove('hide');speak('Chúc mừng bé hoàn thành trò chơi')}
+// demo nghiêng đầu bằng orientation nếu có
+window.addEventListener('deviceorientation',e=>{if(Date.now()-last<1200)return; if(e.gamma<-18){last=Date.now();choose('L')} else if(e.gamma>18){last=Date.now();choose('R')}})
+</script>
+</body>
+</html>
