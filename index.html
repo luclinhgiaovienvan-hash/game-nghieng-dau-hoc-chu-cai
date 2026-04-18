@@ -1,1 +1,145 @@
-<!DOCTYPE html><html lang='vi'><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Bé 5 Tuổi Học Chữ Cái</title><style>body{margin:0;font-family:Arial;background:linear-gradient(135deg,#ffdff0,#dff9ff,#fff6cc);display:grid;place-items:center;padding:12px}.app{max-width:860px;width:100%;background:#fff;border-radius:30px;padding:18px;box-shadow:0 15px 35px rgba(0,0,0,.12)}h1{text-align:center;color:#ff4fa0}.q{text-align:center;font-size:30px;margin:12px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.ans{padding:22px;border-radius:22px;background:linear-gradient(135deg,#f5f5f5,#ffffff);text-align:center;font-size:58px;font-weight:700;cursor:pointer;transition:.2s}.ans:hover{transform:scale(1.03)}.btn{padding:12px 16px;border:0;border-radius:14px;font-weight:700;cursor:pointer;background:#ff8ec7;color:#fff}.reward{text-align:center;font-size:52px;height:60px}.mascot{text-align:center;font-size:72px}</style></head><body><div class='app' id='app'><h1>🌈 Bé Học Chữ Cái</h1><div class='mascot'>🐰</div><div style='text-align:center'><button class='btn' onclick='start()'>Bắt đầu</button></div><div class='q' id='q'>Sẵn sàng chưa nào?</div><div class='grid'><div class='ans' id='left' onclick='choose("left")'>A</div><div class='ans' id='right' onclick='choose("right")'>B</div></div><div class='reward' id='reward'></div></div><script>const quiz=[{ask:'Chữ nào là A?',a:'A',b:'B',c:'left'},{ask:'Chữ nào là B?',a:'D',b:'B',c:'right'},{ask:'Chữ nào là C?',a:'C',b:'G',c:'left'},{ask:'Chữ nào là M?',a:'N',b:'M',c:'right'},{ask:'Chữ nào là O?',a:'Q',b:'O',c:'right'},{ask:'Chữ nào là E?',a:'E',b:'F',c:'left'},{ask:'Chữ nào là H?',a:'K',b:'H',c:'right'},{ask:'Chữ nào là T?',a:'T',b:'Y',c:'left'}];let i=0;function speak(t){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='vi-VN';u.rate=.9;speechSynthesis.speak(u)}function fire(){for(let n=0;n<12;n++){let s=document.createElement('div');s.innerHTML='✨';s.style.position='fixed';s.style.left=Math.random()*100+'vw';s.style.top='20vh';s.style.fontSize='30px';s.style.transition='1s';document.body.appendChild(s);setTimeout(()=>{s.style.top='80vh';s.style.opacity='0';},50);setTimeout(()=>s.remove(),1100);}}function shake(){document.body.style.transform='translateX(8px)';setTimeout(()=>document.body.style.transform='translateX(-8px)',60);setTimeout(()=>document.body.style.transform='translateX(0)',120);if(navigator.vibrate)navigator.vibrate(200)}function load(){if(i>=quiz.length){app.innerHTML='<h1>🏆 Bé học giỏi quá!</h1><div class="mascot">🎁⭐🏅</div><div style="text-align:center"><button class="btn" onclick="location.reload()">Chơi lại</button></div>';speak('Bé học giỏi quá');return;}let x=quiz[i];left.innerHTML=x.a;right.innerHTML=x.b;q.innerHTML='Nghe và chọn chữ cái đúng';setTimeout(()=>speak(x.ask),300)}function choose(side){let ok=side===quiz[i].c;if(ok){reward.innerHTML='⭐';fire();speak('Đúng rồi giỏi lắm')}else{reward.innerHTML='💪';shake();speak('Thử lại nào')}setTimeout(()=>{reward.innerHTML='';i++;load()},1100)}function start(){i=0;load()}</script></body></html>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bé học chữ cái - Nghiêng đầu chọn lựa</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_landmarker/face_landmarker.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        body { 
+            margin: 0; font-family: 'Arial', sans-serif; 
+            background-color: #fce4ec; /* Màu hồng nhạt pastel bạn thích */
+            display: flex; flex-direction: column; align-items: center; overflow: hidden;
+        }
+        #game-container { position: relative; width: 100vw; height: 100vh; text-align: center; }
+        #video-container { position: absolute; top: 10px; right: 10px; width: 150px; border-radius: 10px; border: 3px solid white; transform: scaleX(-1); }
+        
+        .question { font-size: 3rem; color: #d81b60; margin-top: 50px; }
+        .options-container { display: flex; justify-content: space-around; width: 100%; margin-top: 100px; }
+        
+        .option-box { 
+            width: 300px; height: 300px; background: white; border-radius: 50px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 8rem; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            border: 10px solid transparent; transition: all 0.3s;
+        }
+        .selecting-left { border-color: #4caf50; transform: scale(1.1); }
+        .selecting-right { border-color: #4caf50; transform: scale(1.1); }
+        
+        #status-icon { 
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-size: 200px; display: none; z-index: 100;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <video id="webcam" style="display:none" autoplay playsinline></video>
+    <canvas id="video-container"></canvas>
+    
+    <div class="question" id="ques-text">Hãy chọn chữ a</div>
+    
+    <div class="options-container">
+        <div id="opt-left" class="option-box">a</div>
+        <div id="opt-right" class="option-box">ă</div>
+    </div>
+
+    <div id="status-icon">❌</div>
+</div>
+
+<script>
+    const data = [
+        { q: 'a', options: ['a', 'ă'] },
+        { q: 'ă', options: ['ă', 'â'] },
+        { q: 'â', options: ['â', 'ă'] },
+        { q: 'b', options: ['b', 'd'] },
+        { q: 'd', options: ['d', 'b'] },
+        { q: 'đ', options: ['đ', 'd'] },
+        { q: 'ô', options: ['ô', 'ư'] },
+        { q: 'ư', options: ['ư', 'ô'] }
+    ];
+
+    let currentIdx = 0;
+    let isProcessing = false;
+    let tiltStatus = "neutral"; // left, right, neutral
+
+    const quesText = document.getElementById('ques-text');
+    const optLeft = document.getElementById('opt-left');
+    const optRight = document.getElementById('opt-right');
+    const statusIcon = document.getElementById('status-icon');
+
+    // Hàm xáo trộn mảng
+    function shuffle(array) {
+        return array.sort(() => Math.random() - 0.5);
+    }
+
+    function loadQuestion() {
+        const item = data[currentIdx];
+        quesText.innerText = `Hãy chọn chữ ${item.q}`;
+        const shuffled = shuffle([...item.options]);
+        optLeft.innerText = shuffled[0];
+        optRight.innerText = shuffled[1];
+        isProcessing = false;
+        statusIcon.style.display = 'none';
+        optLeft.classList.remove('selecting-left');
+        optRight.classList.remove('selecting-right');
+    }
+
+    async function onAnswer(selectedSide) {
+        if (isProcessing) return;
+        isProcessing = true;
+        
+        const selectedLetter = selectedSide === 'left' ? optLeft.innerText : optRight.innerText;
+        const correctLetter = data[currentIdx].q;
+
+        if (selectedLetter === correctLetter) {
+            // Đúng: Pháo hoa
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            setTimeout(() => {
+                currentIdx = (currentIdx + 1) % data.length;
+                loadQuestion();
+            }, 2000);
+        } else {
+            // Sai: Rung và hiện dấu X
+            if (navigator.vibrate) navigator.vibrate(500);
+            statusIcon.innerText = "❌";
+            statusIcon.style.display = 'block';
+            setTimeout(() => {
+                statusIcon.style.display = 'none';
+                isProcessing = false;
+            }, 1000);
+        }
+    }
+
+    // Logic MediaPipe để nhận diện nghiêng đầu
+    // (Giả lập logic nhận diện đơn giản từ tọa độ mắt)
+    function checkTilt(landmarks) {
+        const leftEye = landmarks[33]; 
+        const rightEye = landmarks[263];
+        
+        // Tính độ chênh lệch y giữa 2 mắt để biết độ nghiêng
+        const diffY = leftEye.y - rightEye.y;
+
+        if (diffY > 0.04) { // Nghiêng phải (tính theo gương là trái màn hình)
+            optLeft.classList.add('selecting-left');
+            optRight.classList.remove('selecting-right');
+            return 'left';
+        } else if (diffY < -0.04) { // Nghiêng trái
+            optRight.classList.add('selecting-right');
+            optLeft.classList.remove('selecting-left');
+            return 'right';
+        } else {
+            optLeft.classList.remove('selecting-left');
+            optRight.classList.remove('selecting-right');
+            return 'neutral';
+        }
+    }
+
+    // Khởi tạo Game
+    loadQuestion();
+    
+    // Lưu ý: Phần khởi tạo FaceLandmarker thực tế cần file wasm và model. 
+    // Linh có thể tích hợp đoạn script khởi tạo camera và detector của MediaPipe vào đây.
+</script>
+</body>
+</html>
