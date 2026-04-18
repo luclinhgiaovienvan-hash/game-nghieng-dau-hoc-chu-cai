@@ -1,145 +1,198 @@
 <!DOCTYPE html>
-<html>
+<html lang="vi">
 <head>
-    <title>Bé học chữ cái - Nghiêng đầu chọn lựa</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_landmarker/face_landmarker.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Bé Học Chữ Cái - Vụn Vặt Project</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs" type="module"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
     <style>
-        body { 
-            margin: 0; font-family: 'Arial', sans-serif; 
-            background-color: #fce4ec; /* Màu hồng nhạt pastel bạn thích */
-            display: flex; flex-direction: column; align-items: center; overflow: hidden;
+        :root {
+            --pastel-pink: #fce4ec;
+            --pastel-blue: #e3f2fd;
+            --pastel-green: #e8f5e9;
+            --accent-color: #ff80ab;
+            --text-color: #5d4037;
         }
-        #game-container { position: relative; width: 100vw; height: 100vh; text-align: center; }
-        #video-container { position: absolute; top: 10px; right: 10px; width: 150px; border-radius: 10px; border: 3px solid white; transform: scaleX(-1); }
-        
-        .question { font-size: 3rem; color: #d81b60; margin-top: 50px; }
-        .options-container { display: flex; justify-content: space-around; width: 100%; margin-top: 100px; }
-        
-        .option-box { 
-            width: 300px; height: 300px; background: white; border-radius: 50px;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 8rem; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-            border: 10px solid transparent; transition: all 0.3s;
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-blue));
+            color: var(--text-color);
+            overflow: hidden;
+            touch-action: manipulation;
         }
-        .selecting-left { border-color: #4caf50; transform: scale(1.1); }
-        .selecting-right { border-color: #4caf50; transform: scale(1.1); }
+
+        /* Giao diện chính */
+        #game-container {
+            display: flex; flex-direction: column; align-items: center;
+            width: 100%; height: 100%; position: relative;
+        }
+
+        /* Thanh tiến trình & Điểm */
+        .header {
+            width: 90%; display: flex; justify-content: space-between;
+            align-items: center; margin-top: 15px; z-index: 10;
+        }
+        #progress-bar {
+            flex-grow: 1; height: 15px; background: white;
+            border-radius: 10px; margin: 0 15px; overflow: hidden;
+        }
+        #progress-fill {
+            width: 0%; height: 100%; background: var(--accent-color);
+            transition: width 0.3s;
+        }
+
+        /* Nhân vật & Câu hỏi */
+        .character-box { font-size: 50px; margin: 10px 0; animation: bounce 2s infinite; }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         
-        #status-icon { 
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            font-size: 200px; display: none; z-index: 100;
+        .question-text {
+            font-size: 1.8rem; text-align: center; font-weight: bold;
+            background: rgba(255, 255, 255, 0.7); padding: 10px 20px;
+            border-radius: 20px; border: 3px dashed var(--accent-color);
+            margin: 0 10px;
+        }
+
+        /* Khu vực đáp án */
+        .options-area {
+            display: flex; justify-content: space-around; width: 100%;
+            margin-top: 30px; padding: 0 10px; box-sizing: border-box;
+        }
+        .option-card {
+            width: 40%; aspect-ratio: 1/1; background: white;
+            border-radius: 30px; display: flex; align-items: center;
+            justify-content: center; font-size: 5rem; font-weight: bold;
+            box-shadow: 0 8px 0 #ddd; border: 8px solid transparent;
+            transition: all 0.2s; position: relative;
+        }
+        .option-card.active { border-color: #4caf50; transform: scale(1.05); }
+
+        /* Camera & Điều khiển dự phòng */
+        #cam-preview {
+            position: absolute; bottom: 10px; right: 10px;
+            width: 100px; height: 75px; border-radius: 10px;
+            background: #000; transform: scaleX(-1); border: 2px solid white;
+        }
+        .controls-fallback {
+            position: absolute; bottom: 30px; display: flex; gap: 50px;
+        }
+        .btn-manual {
+            padding: 15px 30px; border-radius: 50px; border: none;
+            background: var(--accent-color); color: white; font-weight: bold;
+        }
+
+        /* Lớp phủ (Start/End/Feedback) */
+        .overlay {
+            position: fixed; inset: 0; background: rgba(255,255,255,0.95);
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; z-index: 100; text-align: center;
+        }
+        .btn-main {
+            padding: 20px 60px; font-size: 1.5rem; border-radius: 50px;
+            background: #4caf50; color: white; border: none; cursor: pointer;
+            box-shadow: 0 6px 0 #2e7d32; margin-top: 20px;
+        }
+        
+        #feedback-icon {
+            position: absolute; font-size: 10rem; display: none; z-index: 200;
+        }
+
+        /* Hiệu ứng rung màn hình */
+        .shake { animation: shake 0.5s; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
         }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <video id="webcam" style="display:none" autoplay playsinline></video>
-    <canvas id="video-container"></canvas>
-    
-    <div class="question" id="ques-text">Hãy chọn chữ a</div>
-    
-    <div class="options-container">
-        <div id="opt-left" class="option-box">a</div>
-        <div id="opt-right" class="option-box">ă</div>
+    <div class="header">
+        <div id="score-text">⭐: 0</div>
+        <div id="progress-bar"><div id="progress-fill"></div></div>
     </div>
 
-    <div id="status-icon">❌</div>
+    <div class="character-box">🐰</div>
+    <div class="question-text" id="question">Đang tải...</div>
+
+    <div class="options-area">
+        <div id="opt-L" class="option-card" onclick="checkAnswer('L')">?</div>
+        <div id="opt-R" class="option-card" onclick="checkAnswer('R')">?</div>
+    </div>
+
+    <video id="webcam" style="display:none" autoplay playsinline></video>
+    <canvas id="cam-preview"></canvas>
+
+    <div class="controls-fallback">
+        <button class="btn-manual" onclick="checkAnswer('L')">⬅️ Trái</button>
+        <button class="btn-manual" onclick="checkAnswer('R')">Phải ➡️</button>
+    </div>
+
+    <div id="feedback-icon">❌</div>
 </div>
 
-<script>
-    const data = [
-        { q: 'a', options: ['a', 'ă'] },
-        { q: 'ă', options: ['ă', 'â'] },
-        { q: 'â', options: ['â', 'ă'] },
-        { q: 'b', options: ['b', 'd'] },
-        { q: 'd', options: ['d', 'b'] },
-        { q: 'đ', options: ['đ', 'd'] },
-        { q: 'ô', options: ['ô', 'ư'] },
-        { q: 'ư', options: ['ư', 'ô'] }
+<div id="start-screen" class="overlay">
+    <h1 style="color: var(--accent-color); font-size: 3rem;">BÉ HỌC CHỮ CÁI</h1>
+    <p>Nghiêng đầu sang trái hoặc phải để chọn đáp án nhé!</p>
+    <div class="character-box" style="font-size: 100px;">🎨</div>
+    <button class="btn-main" onclick="startGame()">BẮT ĐẦU</button>
+</div>
+
+<div id="end-screen" class="overlay" style="display: none;">
+    <h1 id="final-status">HOÀN THÀNH!</h1>
+    <p style="font-size: 1.5rem;">Số điểm của bé: <span id="final-score">0</span></p>
+    <div class="character-box" style="font-size: 100px;">🏆</div>
+    <button class="btn-main" onclick="location.reload()">CHƠI LẠI</button>
+</div>
+
+<script type="module">
+    import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs";
+
+    // --- DỮ LIỆU CÂU HỎI (TỪ FILE PPT CỦA LINH) ---
+    const QUESTIONS_DATA = [
+        { q: "a", options: ["a", "ă"], correct: "a" }, // Slide 3
+        { q: "ă", options: ["ă", "â"], correct: "ă" }, // Slide 6
+        { q: "â", options: ["â", "ă"], correct: "â" }, // Slide 9
+        { q: "b", options: ["b", "d"], correct: "b" }, // Slide 12
+        { q: "d", options: ["d", "b"], correct: "d" }, // Slide 15
+        { q: "đ", options: ["đ", "d"], correct: "đ" }, // Slide 18
+        { q: "ô", options: ["ô", "ư"], correct: "ô" }, // Slide 21
+        { q: "ư", options: ["ư", "ô"], correct: "ư" }  // Slide 24
     ];
 
+    let currentQuestions = [];
     let currentIdx = 0;
+    let score = 0;
+    let faceLandmarker;
+    let webcamRunning = false;
     let isProcessing = false;
-    let tiltStatus = "neutral"; // left, right, neutral
+    let selectionCounter = 0; // Để tránh nhận diện quá nhạy
 
-    const quesText = document.getElementById('ques-text');
-    const optLeft = document.getElementById('opt-left');
-    const optRight = document.getElementById('opt-right');
-    const statusIcon = document.getElementById('status-icon');
+    const video = document.getElementById("webcam");
+    const canvas = document.getElementById("cam-preview");
+    const ctx = canvas.getContext("2d");
 
-    // Hàm xáo trộn mảng
-    function shuffle(array) {
-        return array.sort(() => Math.random() - 0.5);
+    // Khởi tạo MediaPipe
+    async function initFaceDetection() {
+        const filesetResolver = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm");
+        faceLandmarker = await FaceLandmarker.createFromOptions(filesetResolver, {
+            baseOptions: {
+                modelAssetPath: `https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task`,
+                delegate: "GPU"
+            },
+            runningMode: "VIDEO",
+            numFaces: 1
+        });
     }
 
-    function loadQuestion() {
-        const item = data[currentIdx];
-        quesText.innerText = `Hãy chọn chữ ${item.q}`;
-        const shuffled = shuffle([...item.options]);
-        optLeft.innerText = shuffled[0];
-        optRight.innerText = shuffled[1];
-        isProcessing = false;
-        statusIcon.style.display = 'none';
-        optLeft.classList.remove('selecting-left');
-        optRight.classList.remove('selecting-right');
-    }
-
-    async function onAnswer(selectedSide) {
-        if (isProcessing) return;
-        isProcessing = true;
+    window.startGame = async () => {
+        document.getElementById('start-screen').style.display = 'none';
         
-        const selectedLetter = selectedSide === 'left' ? optLeft.innerText : optRight.innerText;
-        const correctLetter = data[currentIdx].q;
-
-        if (selectedLetter === correctLetter) {
-            // Đúng: Pháo hoa
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-            setTimeout(() => {
-                currentIdx = (currentIdx + 1) % data.length;
-                loadQuestion();
-            }, 2000);
-        } else {
-            // Sai: Rung và hiện dấu X
-            if (navigator.vibrate) navigator.vibrate(500);
-            statusIcon.innerText = "❌";
-            statusIcon.style.display = 'block';
-            setTimeout(() => {
-                statusIcon.style.display = 'none';
-                isProcessing = false;
-            }, 1000);
-        }
-    }
-
-    // Logic MediaPipe để nhận diện nghiêng đầu
-    // (Giả lập logic nhận diện đơn giản từ tọa độ mắt)
-    function checkTilt(landmarks) {
-        const leftEye = landmarks[33]; 
-        const rightEye = landmarks[263];
-        
-        // Tính độ chênh lệch y giữa 2 mắt để biết độ nghiêng
-        const diffY = leftEye.y - rightEye.y;
-
-        if (diffY > 0.04) { // Nghiêng phải (tính theo gương là trái màn hình)
-            optLeft.classList.add('selecting-left');
-            optRight.classList.remove('selecting-right');
-            return 'left';
-        } else if (diffY < -0.04) { // Nghiêng trái
-            optRight.classList.add('selecting-right');
-            optLeft.classList.remove('selecting-left');
-            return 'right';
-        } else {
-            optLeft.classList.remove('selecting-left');
-            optRight.classList.remove('selecting-right');
-            return 'neutral';
-        }
-    }
-
-    // Khởi tạo Game
-    loadQuestion();
-    
-    // Lưu ý: Phần khởi tạo FaceLandmarker thực tế cần file wasm và model. 
-    // Linh có thể tích hợp đoạn script khởi tạo camera và detector của MediaPipe vào đây.
-</script>
-</body>
-</html>
+        // Trộn câu hỏi
+        currentQuestions = [...QUESTIONS
